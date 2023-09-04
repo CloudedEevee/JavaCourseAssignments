@@ -20,8 +20,10 @@ public class TestPuzzleJava {
 		System.out.println(generator.getNewPasswordSet(5));
 		System.out.println(generator.getNewPasswordSet(5));
 
-        // System.out.println("\n----- Shuffle Array Test -----");
-		// System.out.println(generator.shuffleArray());
+        System.out.println("\n----- Shuffle Array Test -----");
+		ArrayList<String> thisArr = generator.getNewPasswordSet(5);
+		System.out.println(thisArr);
+		System.out.println(generator.shuffleArray(thisArr));
 
 
         System.out.println("\n");

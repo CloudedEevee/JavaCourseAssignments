@@ -48,11 +48,29 @@ public class PuzzleJava {
         return passwordSet;
     }
 
-    // public String[] shuffleArray(ArrayList<String> givenArrayList) {
-    //         // find given array length
-    //     int arrayLen = givenArrayList.size();
-    //         // 
-
-    // }
-
+    public ArrayList<String> shuffleArray(ArrayList<String> givenArrayList) {
+        int arrayLen = givenArrayList.size();
+            // create ranom int for how many iterations to shuffle
+                // THINK: how many times to split deck of cards and shuffle the whole deck together before considered "shuffled"?
+        int randIter = random.nextInt(3) + 2; // +2 so incl. options are 2-5 
+        System.out.println(String.format("Shuffling %d times....", randIter) );
+            // iterate through each index and replace it with a random other variable in the array
+        for (int i = 0; i < randIter; i++) {
+                // iterations through entire array
+            for (int j = 0; j < arrayLen; j++) {
+                    // hold the original value for later
+                String tempTransitionVar = givenArrayList.get(i);
+                    // find random other index to replace the original value
+                int randIndex = random.nextInt(arrayLen); // nextInt exludes the last number, and includes 0, so perfect for .size()
+                    // find value at random other index
+                String replaceVar = givenArrayList.get(randIndex);
+                    // set original value as random other value
+                givenArrayList.set(i, replaceVar);
+                    // set random other value as original value (effectively swapping them)
+                givenArrayList.set(randIndex, tempTransitionVar);
+                    // start again with next value in arraylist until all through arraylist
+            }
+        }
+        return givenArrayList;
+    }
 }
