@@ -14,6 +14,9 @@ public class TestOrders {
         System.out.println("\n-----------------Display Menu Test-----------------");
         kiosk1.displayMenu();
 
+        System.out.println("\n-----------------New Order Test-----------------");
+        kiosk1.newOrder();
+
         System.out.println("\n");
     }
 
