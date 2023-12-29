@@ -1,0 +1,48 @@
+@charset "UTF-8";
+
+html, body {
+	height: 100%;
+}
+
+.bg {
+	background: CornflowerBlue;
+	height: 100%;
+	padding: 2.25em;
+}
+
+.container {
+	background: AliceBlue; 
+	padding: 1em;
+}
+
+.label {
+	color: CornflowerBlue;
+	font-size: 1.25em;
+	margin: 0;
+}
+
+h1, h2 {
+	color: MidnightBlue;
+}
+
+
+a {
+	color: MidnightBlue;
+    text-decoration: none;
+}
+
+a:hover {
+	color: MidnightBlue;
+    text-decoration: none;
+    cursor:pointer;  
+}
+
+hr {
+	border-top: 2px solid DodgerBlue;
+	width: 100%;
+}
+
+.errors {
+	font-size: 10pt;
+	color: red;
+}

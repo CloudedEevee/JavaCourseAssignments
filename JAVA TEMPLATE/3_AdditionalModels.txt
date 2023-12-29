@@ -1,0 +1,113 @@
+
+************************* For Each Additional Model *************************
+
+----- Class.java -----
+@Entity
+@Table(name="models")
+public class Model {
+
+		@Id
+		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		private Long id;
+		
+		@NotBlank
+		private String name;
+		
+		@NotNull
+		private double amount;
+		
+		@NotBlank
+		private String description;
+		
+		//////////////////// Created/Updated at
+		@Column(updatable = false)
+		private Date createdAt;
+		
+		private Date updatedAt;
+		
+		//////////////////// Constructor
+		
+		public Model() {}
+		
+		
+		//////////////////// Getters & Setters
+		@PrePersist
+		protected void onCreate() {
+			this.createdAt = new Date();
+		}
+		
+		@PreUpdate
+		protected void onUpdate() {
+			this.updatedAt = new Date();
+		}
+		
+		
+}
+
+
+
+
+----- create repository -----
+@Repository
+public interface ModelRepository extends CrudRepository<Model, Long>{
+    // this method retrieves all the books from the database
+    List<Model> findAll();
+    // this method finds models with descriptions containing the search string
+    List<Model> findByDescriptionContaining(String search);
+    // this method counts how many names contain a certain string
+    Long countByNameContaining(String search);
+    // this method deletes a model that starts with a specific name
+    Long deleteByNameStartingWith(String search);
+}
+
+
+----- create service -----
+@Service
+public class ModelService {
+    // adding the model repository as a dependency
+    private final ModelRepository modelRepository;
+    
+    public ModelService(ModelRepository modelRepository) {
+        this.modelRepository = modelRepository;
+    }
+    // returns all the models
+    public List<Model> allModels() {
+        return modelRepository.findAll();
+    }
+    // creates / edits an model
+    public Model createModel(Model e) {
+        return modelRepository.save(e);
+    }
+    // deletes a model
+    public void deleteModel(Long id) {
+    	modelRepository.deleteById(id);
+    }
+    // retrieves a model
+    public Model findModel(Long id) {
+        Optional<Model> optionalModel = modelRepository.findById(id);
+        if(optionalModel.isPresent()) {
+            return optionalModel.get();
+        } else {
+            return null;
+        }
+    }
+}
+
+
+
+
+--------------- NotNull, NotBlank, NotEmpty---------------
+@NotNull
+-Great for int/double
+	-nums auto Null when empty or not filled out
+-Accepts empty fields in forms as EMPTY string => ""
+-For String validation, add @Size(min, max)
+
+@NotBlank
+-Best for Strings
+-Requires String with >0 length
+-Doesn't accept Null / empty fields
+
+@NotEmpty
+-Will not accept Null (empty fields)
+-WILL accept field with only spaces (effectively empty field)

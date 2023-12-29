@@ -1,0 +1,40 @@
+@Controller
+@RequestMapping("/user")
+public class UserController {
+	@Autowired
+	UserService userService;
+
+	//////////////////// Register
+	@PostMapping("/register")
+	public String reg(@Valid @ModelAttribute("newUser") User newUser, BindingResult result, Model model, HttpSession session) {
+		// check user reg validation
+		User potentialUser = userService.register(newUser, result);
+		if (potentialUser == null) {
+			model.addAttribute("newLogin", new LoginUser());
+			return "index.jsp";
+		}
+		session.setAttribute("thisUser", potentialUser);
+		return "redirect:/books";
+	}
+
+	//////////////////// Login
+	@PostMapping("/login")
+	public String login(@Valid @ModelAttribute("newLogin") LoginUser newLogin, BindingResult result, Model model, HttpSession session) {
+		
+		User potentialUser = userService.login(newLogin, result);
+		if ( potentialUser == null) {
+			model.addAttribute("newUser", new User());
+			return "index.jsp";
+		}
+
+		session.setAttribute("thisUser", potentialUser);
+		return "redirect:/books";
+	}
+	
+	//////////////////// Logout
+	@GetMapping("/logout")
+	public String logout(Model model, HttpSession session) {
+		session.removeAttribute("thisUser");
+		return "redirect:/";
+	}
+}

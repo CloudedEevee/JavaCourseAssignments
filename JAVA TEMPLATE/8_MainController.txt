@@ -1,0 +1,19 @@
+@Controller
+public class MainController {
+	@Autowired
+	UserService userService;
+	@Autowired
+	BookService bookService;
+	
+	
+	//////////////////////////////////////// Index > Login/Reg Page
+	@GetMapping("/")
+	public String index(Model model) {
+		model.addAttribute("newUser", new User());
+		model.addAttribute("newLogin", new LoginUser());
+		return "index.jsp";
+	}
+
+	
+
+}

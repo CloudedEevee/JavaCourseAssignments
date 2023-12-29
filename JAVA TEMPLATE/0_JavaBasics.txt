@@ -1,0 +1,560 @@
+************************* Starter Dependancies *************************
+Spring Boot DevTools
+Spring Data JPA
+MySQl Driver
+Spring Web
+
+
+************************* Combined Dependancies *************************
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-tomcat</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.servlet.jsp.jstl</groupId>
+            <artifactId>jakarta.servlet.jsp.jstl-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.web</groupId>
+            <artifactId>jakarta.servlet.jsp.jstl</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-jasper</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mindrot</groupId>
+            <artifactId>jbcrypt</artifactId>
+            <version>0.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+    </dependencies>
+
+
+
+
+
+
+
+
+
+************************* add to src/main/resources/applications.properties *************************
+spring.mvc.view.prefix=/WEB-INF/
+spring.datasource.url=jdbc:mysql://localhost:3306/<<YOUR_SCHEMA>>
+spring.datasource.username=root
+spring.datasource.password=root
+spring.jpa.hibernate.ddl-auto=update
+
+----- if time zone error -----
+spring.mvc.view.prefix=/WEB-INF/
+spring.datasource.url=jdbc:mysql://localhost:3306/<<YOUR_SCHEMA>>?serverTimezone=UTC
+spring.datasource.username=root
+spring.datasource.password=root
+spring.jpa.hibernate.ddl-auto=update
+
+
+
+************************* create folder in src/main/webapp *************************
+WEB-INF
+
+************************* create packages in src/main/java/*.*.projectname *************************
+.controllers
+.models
+.repositories
+.services
+
+
+
+************************* User.java *************************
+@Entity
+@Table(name="user")
+public class User {
+	
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
+	
+	@NotEmpty(message="Username is required!")
+    @Size(min=3, max=30, message="Username must be between 3 and 30 characters")
+    private String userName;
+	
+	@NotEmpty(message="Email is required!")
+    @Email(message="Please enter a valid email!")
+    private String email;
+    
+    @NotEmpty(message="Password is required!")
+    @Size(min=8, max=128, message="Password must be between 8 and 128 characters")
+    private String password;
+    
+    @Transient
+    @NotEmpty(message="Confirm Password is required!")
+    @Size(min=8, max=128, message="Confirm Password must be between 8 and 128 characters")
+    private String confirm;
+    
+	//////////////////// Created/Updated at
+	@Column(updatable = false)
+	private Date createdAt;
+	
+	private Date updatedAt;
+    
+    //////////////////// Constructor
+    public User() {}
+    
+	////////////////////Getters & Setters
+	@PrePersist
+	protected void onCreate() {
+		this.createdAt = new Date();
+	}
+	
+	@PreUpdate
+	protected void onUpdate() {
+		this.updatedAt = new Date();
+	}
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public String getUserName() {
+		return userName;
+	}
+
+	public void setUserName(String userName) {
+		this.userName = userName;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	public String getConfirm() {
+		return confirm;
+	}
+
+	public void setConfirm(String confirm) {
+		this.confirm = confirm;
+	}
+	
+	
+}
+
+
+
+
+
+************************* LoginUser.java *************************
+public class LoginUser {
+
+    @NotEmpty(message="Email is required")
+    @Email(message="Please enter a valid email")
+    private String email;
+    
+    @NotEmpty(message="Password is required")
+    @Size(min=8, max=128, message="Password must be between 8 and 128 characters")
+    private String password;
+
+    //////////////////// Constructor
+    public LoginUser() {}
+
+    ////////////////////Getters & Setters
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+	
+    
+}
+
+
+************************* UserService.java *************************
+@Service
+public class UserService {
+    // adding the user repository as a dependency
+	@Autowired
+    private UserRepository userRepository;
+    
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+    // creates / edits a user
+    public User createUser(User e) {
+    	return userRepository.save(e);
+    }
+    // returns all the users
+    public List<User> allUsers() {
+        return userRepository.findAll();
+    }
+    // retrieves a user
+    public User findUser(Long id) {
+    	Optional<User> optionalUser = userRepository.findById(id);
+    	if(optionalUser.isPresent()) {
+    		return optionalUser.get();
+    	} else {
+    		return null;
+    	}
+    }
+    // deletes a user
+    public void deleteUser(Long id) {
+    	userRepository.deleteById(id);
+    }
+    
+    // called by controller to register user or redirect if errors
+    public User register(User newUser, BindingResult result) {
+    	// Reject values or register if no errors:
+	    	// Reject if password doesn't match confirmation
+	    	if (!newUser.getPassword().equals(newUser.getConfirm())) {
+	    		result.rejectValue("confirm", "Matches", "Confirm Password and Password must match.");
+	    	}
+	    	// Reject if email is taken (present in database)
+	    	Optional<User> potentialUser = userRepository.findByEmail(newUser.getEmail());
+	    	if (potentialUser.isPresent()) {
+	    		result.rejectValue("email", "Matches", "Email is already in use.");
+	    	}
+	    	// Return Null if result has errors
+	    	if (result.hasErrors()) {
+	    		return null;
+	    	}
+            
+            // Hash and set password, save user to database
+            String hashed = BCrypt.hashpw(newUser.getPassword(), BCrypt.gensalt());
+            newUser.setPassword(hashed);
+            userRepository.save(newUser);
+            return newUser;
+    }
+    
+    public User login(LoginUser newLogin, BindingResult result) {
+        // Reject if email not found
+    	Optional<User> potentialLogin = userRepository.findByEmail(newLogin.getEmail());
+        if (!potentialLogin.isPresent()) {
+        	result.rejectValue("email", "Matches", "Incorrect email or password.");
+        }
+        // Reject if password incorrect
+        if (!BCrypt.checkpw(newLogin.getPassword(), potentialLogin.get().getPassword())) {
+        	result.rejectValue("password", "Matches", "Incorrect email or password.");
+        }
+        // Return Null if result has errors
+        if(result.hasErrors()) {
+        	return null;
+        }
+        
+        // Otherwise, return user object
+        return this.findUser(potentialLogin.get().getId());
+        
+    }
+}
+
+
+************************* UserRepository.java *************************
+@Repository
+public interface UserRepository extends CrudRepository<User, Long>{
+    // this method retrieves all the users from the database
+    List<User> findAll();
+    // this method finds user with email
+    Optional<User> findByEmail(String email);
+    // this method finds users with userNames containing the search string
+    List<User> findByUserNameContaining(String search);
+    // this method counts how many names contain a certain string
+    Long countByUserNameContaining(String search);
+    // this method deletes a user that starts with a specific name
+    Long deleteByUserNameStartingWith(String search);
+}
+
+************************* For Each Additional Model *************************
+
+----- Class.java -----
+@Entity
+@Table(name="models")
+public class Model {
+
+		@Id
+		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		private Long id;
+		
+		@NotBlank
+		private String name;
+		
+		@NotNull
+		private double amount;
+		
+		@NotBlank
+		private String description;
+		
+		//////////////////// Created/Updated at
+		@Column(updatable = false)
+		private Date createdAt;
+		
+		private Date updatedAt;
+		
+		//////////////////// Constructor
+		
+		public void Model() {}
+		
+		
+		//////////////////// Getters & Setters
+		@PrePersist
+		protected void onCreate() {
+			this.createdAt = new Date();
+		}
+		
+		@PreUpdate
+		protected void onUpdate() {
+			this.updatedAt = new Date();
+		}
+		
+		
+}
+
+
+
+
+----- create repository -----
+@Repository
+public interface ModelRepository extends CrudRepository<Model, Long>{
+    // this method retrieves all the books from the database
+    List<Model> findAll();
+    // this method finds models with descriptions containing the search string
+    List<Model> findByDescriptionContaining(String search);
+    // this method counts how many names contain a certain string
+    Long countByNameContaining(String search);
+    // this method deletes a model that starts with a specific name
+    Long deleteByNameStartingWith(String search);
+}
+
+
+----- create service -----
+@Service
+public class ModelService {
+    // adding the model repository as a dependency
+    private final ModelRepository modelRepository;
+    
+    public ModelService(ModelRepository modelRepository) {
+        this.modelRepository = modelRepository;
+    }
+    // returns all the models
+    public List<Model> allModels() {
+        return modelRepository.findAll();
+    }
+    // creates / edits an model
+    public Model createModel(Model e) {
+        return modelRepository.save(e);
+    }
+    // deletes a model
+    public void deleteModel(Long id) {
+    	modelRepository.deleteById(id);
+    }
+    // retrieves a model
+    public Model findModel(Long id) {
+        Optional<Model> optionalModel = modelRepository.findById(id);
+        if(optionalModel.isPresent()) {
+            return optionalModel.get();
+        } else {
+            return null;
+        }
+    }
+}
+
+
+
+
+--------------- NotNull, NotBlank, NotEmpty---------------
+@NotNull
+-Great for int/double
+	-nums auto Null when empty or not filled out
+-Accepts empty fields in forms as EMPTY string => ""
+-For String validation, add @Size(min, max)
+
+@NotBlank
+-Best for Strings
+-Requires String with >0 length
+-Doesn't accept Null / empty fields
+
+@NotEmpty
+-Will not accept Null (empty fields)
+-WILL accept field with only spaces (effectively empty field)
+
+
+
+************************* index.jsp > Login & Reg *************************
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib prefix = "c" uri = "http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
+<%@ page isErrorPage="true" %> 
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" type="text/css" href="/css/style.css">
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+	<title>Login & Registration</title>
+</head>
+<body>
+
+	<div class="bg">
+		<div class="container">
+			<h1>Welcome!</h1>
+			<p>Join our growing community.</p>
+		</div>
+		<div class="container">
+			<div class="row gy-2">
+				<div class="col">
+					<div class="container">
+						<h2>Register</h2>
+						<form:form action="/user/register" modelAttribute="newUser">
+							<div class="form-group form-floating my-2">
+								<form:input path="userName" type="text" class="form-control border border-primary-subtle"/>
+								<form:label path="userName" class="form-label mb-2 ps-4">Username</form:label>
+								<form:errors path="userName" class="mx-3 errors"/>
+							</div>
+							<div class="form-group form-floating my-2">
+								<form:input path="email" type="email" class="form-control border border-primary-subtle"/>
+								<form:label path="email" class="form-label mb-2 ps-4">Email</form:label>
+								<form:errors path="email" class="mx-3 errors"/>
+							</div>
+							<div class="form-group form-floating my-2">
+								<form:input path="password" type="password" class="form-control border border-primary-subtle"/>
+								<form:label path="password" class="form-label mb-2 ps-4">Password</form:label>
+								<form:errors path="password" class="mx-3 errors"/>
+							</div>
+							<div class="form-group form-floating my-2">
+								<form:input path="confirm" type="password" class="form-control border border-primary-subtle"/>
+								<form:label path="confirm" class="form-label mb-2 ps-4">Confirm Password</form:label>
+								<form:errors path="confirm" class="mx-3 errors"/>
+							</div>
+							<form:button type="submit" class="btn btn-primary my-2">Register Me</form:button>
+						</form:form>
+					</div>
+				</div>
+				<div class="col">
+					<div class="container">
+						<h2>Login</h2>
+						<form:form action="/user/login" modelAttribute="newLogin">
+							<div class="form-group form-floating my-2">
+								<form:input path="email" type="email" class="form-control border border-primary-subtle"/>
+								<form:label path="email" class="form-label mb-2 ps-4">Email</form:label>
+								<form:errors path="email" class="mx-3 errors"/>
+							</div>
+							<div class="form-group form-floating my-2">
+								<form:input path="password" type="password" class="form-control border border-primary-subtle"/>
+								<form:label path="password" class="form-label mb-2 ps-4">Password</form:label>
+								<form:errors path="password" class="mx-3 errors"/>
+							</div>
+							<form:button type="submit" class="btn btn-primary my-2">Log In</form:button>
+						</form:form>
+					</div>
+				</div>
+			
+			</div>
+			
+			</div>
+	
+	
+	
+	</div>
+
+
+
+	<script type="text/javascript" src="/js/app.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js" integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3" crossorigin="anonymous"></script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.min.js" integrity="sha384-cuYeSxntonz0PPNlHhBs68uyIAVpIIOZZ5JqeqvYYIcEL727kskC66kF92t6Xl2V" crossorigin="anonymous"></script>
+</body>
+</html>
+
+
+
+************************* addedtemplate.jsp *************************
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib prefix = "c" uri = "http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
+<%@ page isErrorPage="true" %> 
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" type="text/css" href="/css/style.css">
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+	<title>Insert Title Here</title>
+</head>
+<body>
+
+	
+
+
+
+	<script type="text/javascript" src="/js/app.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js" integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3" crossorigin="anonymous"></script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.min.js" integrity="sha384-cuYeSxntonz0PPNlHhBs68uyIAVpIIOZZ5JqeqvYYIcEL727kskC66kF92t6Xl2V" crossorigin="anonymous"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

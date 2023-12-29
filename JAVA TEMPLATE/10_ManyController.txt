@@ -1,0 +1,42 @@
+@Controller
+@RequestMapping("/books")
+public class BookController {
+	@Autowired
+	BookService bookService;
+	
+	//////////////////////////////////////// Books > Home Page
+	@GetMapping("")
+	public String home(Model model, HttpSession session) {
+		if (session.getAttribute("thisUser") == null) {
+			return "redirect:/";
+		}
+		List<Book> allBooks = bookService.allBooks();
+		model.addAttribute("allBooks", allBooks);
+		return "books.jsp";
+	}
+	
+	
+	//////////////////////////////////////// New Book
+	@GetMapping("/new")
+	public String newBook(@ModelAttribute("newBook") Book newBook, BindingResult result, Model model, HttpSession session) {
+		if (session.getAttribute("thisUser") == null) {
+			return "redirect:/";
+		}
+		model.addAttribute("newBook", new Book());
+		return "newBook.jsp";
+	}
+	
+	@PostMapping("/new/process")
+	public String createBook(@ModelAttribute("newBook") Book newBook, BindingResult result, Model model, HttpSession session) {
+		if (session.getAttribute("thisUser") == null) {
+			return "redirect:/";
+		}
+		if (result.hasErrors()) {
+			System.out.println(newBook.getUser().getId());
+			model.addAttribute("newBook", new Book());
+			return "newBook.jsp";
+		}
+		bookService.createBook(newBook);
+		return "redirect:/books";
+	}
+}

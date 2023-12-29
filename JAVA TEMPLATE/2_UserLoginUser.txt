@@ -1,0 +1,221 @@
+
+************************* User.java *************************
+@Entity
+@Table(name="user")
+public class User {
+	
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
+	
+	@NotEmpty(message="Username is required!")
+    @Size(min=3, max=30, message="Username must be between 3 and 30 characters")
+    private String userName;
+	
+	@NotEmpty(message="Email is required!")
+    @Email(message="Please enter a valid email!")
+    private String email;
+    
+    @NotEmpty(message="Password is required!")
+    @Size(min=8, max=128, message="Password must be between 8 and 128 characters")
+    private String password;
+    
+    @Transient
+    @NotEmpty(message="Confirm Password is required!")
+    @Size(min=8, max=128, message="Confirm Password must be between 8 and 128 characters")
+    private String confirm;
+    
+	//////////////////// Created/Updated at
+	@Column(updatable = false)
+	private Date createdAt;
+	
+	private Date updatedAt;
+    
+    //////////////////// Constructor
+    public User() {}
+    
+	////////////////////Getters & Setters
+	@PrePersist
+	protected void onCreate() {
+		this.createdAt = new Date();
+	}
+	
+	@PreUpdate
+	protected void onUpdate() {
+		this.updatedAt = new Date();
+	}
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public String getUserName() {
+		return userName;
+	}
+
+	public void setUserName(String userName) {
+		this.userName = userName;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	public String getConfirm() {
+		return confirm;
+	}
+
+	public void setConfirm(String confirm) {
+		this.confirm = confirm;
+	}
+	
+	
+}
+
+
+
+
+
+************************* LoginUser.java *************************
+public class LoginUser {
+
+    @NotEmpty(message="Email is required")
+    @Email(message="Please enter a valid email")
+    private String email;
+    
+    @NotEmpty(message="Password is required")
+    @Size(min=8, max=128, message="Password must be between 8 and 128 characters")
+    private String password;
+
+    //////////////////// Constructor
+    public LoginUser() {}
+
+    ////////////////////Getters & Setters
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+	
+    
+}
+
+
+************************* UserService.java *************************
+@Service
+public class UserService {
+    // adding the user repository as a dependency
+	@Autowired
+    private UserRepository userRepository;
+    
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+    // creates / edits a user
+    public User createUser(User e) {
+    	return userRepository.save(e);
+    }
+    // returns all the users
+    public List<User> allUsers() {
+        return userRepository.findAll();
+    }
+    // retrieves a user
+    public User findUser(Long id) {
+    	Optional<User> optionalUser = userRepository.findById(id);
+    	if(optionalUser.isPresent()) {
+    		return optionalUser.get();
+    	} else {
+    		return null;
+    	}
+    }
+    // deletes a user
+    public void deleteUser(Long id) {
+    	userRepository.deleteById(id);
+    }
+    
+    // called by controller to register user or redirect if errors
+    public User register(User newUser, BindingResult result) {
+    	// Reject values or register if no errors:
+	    	// Reject if password doesn't match confirmation
+	    	if (!newUser.getPassword().equals(newUser.getConfirm())) {
+	    		result.rejectValue("confirm", "Matches", "Confirm Password and Password must match.");
+	    	}
+	    	// Reject if email is taken (present in database)
+	    	Optional<User> potentialUser = userRepository.findByEmail(newUser.getEmail());
+	    	if (potentialUser.isPresent()) {
+	    		result.rejectValue("email", "Matches", "Email is already in use.");
+	    	}
+	    	// Return Null if result has errors
+	    	if (result.hasErrors()) {
+	    		return null;
+	    	}
+            
+            // Hash and set password, save user to database
+            String hashed = BCrypt.hashpw(newUser.getPassword(), BCrypt.gensalt());
+            newUser.setPassword(hashed);
+            userRepository.save(newUser);
+            return newUser;
+    }
+    
+    public User login(LoginUser newLogin, BindingResult result) {
+        // Reject if email not found
+    	Optional<User> potentialLogin = userRepository.findByEmail(newLogin.getEmail());
+        if (!potentialLogin.isPresent()) {
+        	result.rejectValue("email", "Matches", "Incorrect email or password.");
+        }
+        // Reject if password incorrect
+        if (!BCrypt.checkpw(newLogin.getPassword(), potentialLogin.get().getPassword())) {
+        	result.rejectValue("password", "Matches", "Incorrect email or password.");
+        }
+        // Return Null if result has errors
+        if(result.hasErrors()) {
+        	return null;
+        }
+        
+        // Otherwise, return user object
+        return this.findUser(potentialLogin.get().getId());
+        
+    }
+}
+
+
+************************* UserRepository.java *************************
+@Repository
+public interface UserRepository extends CrudRepository<User, Long>{
+    // this method retrieves all the users from the database
+    List<User> findAll();
+    // this method finds user with email
+    Optional<User> findByEmail(String email);
+    // this method finds users with userNames containing the search string
+    List<User> findByUserNameContaining(String search);
+    // this method counts how many names contain a certain string
+    Long countByUserNameContaining(String search);
+    // this method deletes a user that starts with a specific name
+    Long deleteByUserNameStartingWith(String search);
+}
